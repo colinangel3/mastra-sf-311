@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///home/jimbob/daemo-2026/demos_repos/daemo-crm-frontend/client/src/app/icon.png.mjs%20%28structured%20image%20object%29"],"sourcesContent":["import src from \"IMAGE\";\nexport default { src, width: 96, height: 95 }\n"],"names":[],"mappings":";;;;AAAA;;uCACe;IAAE,KAAA,gIAAG;IAAE,OAAO;IAAI,QAAQ;AAAG","debugId":null}}]
-}

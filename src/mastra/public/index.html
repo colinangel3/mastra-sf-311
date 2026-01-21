@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIBRS Crime Data Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a26;
+      --text-primary: #f0f0f5;
+      --text-secondary: #a0a0b0;
+      --text-muted: #606070;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --border: #2a2a3a;
+      --success: #22c55e;
+      --error: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 1rem;
+    }
+
+    .message {
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .message-label.user {
+      color: var(--accent);
+    }
+
+    .message-label.assistant {
+      color: var(--success);
+    }
+
+    .message-label .icon {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .message-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-size: 0.9375rem;
+      line-height: 1.7;
+    }
+
+    .message-content.user {
+      background: var(--bg-tertiary);
+      border-color: var(--accent);
+      border-left: 3px solid var(--accent);
+    }
+
+    .message-content h1,
+    .message-content h2,
+    .message-content h3 {
+      margin-top: 1.25rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+
+    .message-content h1:first-child,
+    .message-content h2:first-child,
+    .message-content h3:first-child {
+      margin-top: 0;
+    }
+
+    .message-content h2 {
+      font-size: 1.125rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    .message-content h3 {
+      font-size: 1rem;
+    }
+
+    .message-content p {
+      margin-bottom: 0.75rem;
+    }
+
+    .message-content ul,
+    .message-content ol {
+      margin-left: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .message-content li {
+      margin-bottom: 0.25rem;
+    }
+
+    .message-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.875rem;
+    }
+
+    .message-content th,
+    .message-content td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    .message-content th {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .message-content td {
+      color: var(--text-secondary);
+    }
+
+    .message-content code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-tertiary);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.875em;
+    }
+
+    .message-content pre {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .message-content pre code {
+      background: none;
+      padding: 0;
+    }
+
+    .message-content strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .message-content em {
+      color: var(--text-secondary);
+    }
+
+    .input-area {
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(0deg, var(--bg-primary) 80%, transparent 100%);
+      padding-top: 1rem;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 0.75rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.75rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-container:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .input-container textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9375rem;
+      resize: none;
+      outline: none;
+      min-height: 24px;
+      max-height: 200px;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .input-container textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .send-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.75rem 1.25rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .send-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .send-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .send-btn svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      padding: 1rem;
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .loading-dots span {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .example-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.5rem 1rem;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .example-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--error);
+      border-radius: 8px;
+      padding: 1rem;
+      color: var(--error);
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>🔍 NIBRS Crime Data Agent</h1>
+    <p>Powered by FBI NIBRS Database • Ask questions about crime statistics across the United States</p>
+  </header>
+
+  <main class="main">
+    <div class="examples">
+      <button class="example-btn" onclick="setQuery('What are the most common crimes in California?')">
+        Top crimes in CA
+      </button>
+      <button class="example-btn" onclick="setQuery('Compare homicide rates between New York and Texas in 2024')">
+        Compare NY vs TX homicides
+      </button>
+      <button class="example-btn" onclick="setQuery('What types of weapons are most commonly used in robberies?')">
+        Weapons in robberies
+      </button>
+      <button class="example-btn" onclick="setQuery('Show me hate crime statistics by bias motivation')">
+        Hate crime stats
+      </button>
+    </div>
+
+    <div id="messages" class="messages"></div>
+
+    <div class="input-area">
+      <div class="input-container">
+        <textarea
+          id="query"
+          placeholder="Ask a question about crime data..."
+          rows="1"
+          onkeydown="handleKeydown(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button id="sendBtn" class="send-btn" onclick="sendQuery()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          Send
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const queryEl = document.getElementById('query');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let isLoading = false;
+
+    function setQuery(text) {
+      queryEl.value = text;
+      queryEl.focus();
+      autoResize(queryEl);
+    }
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+    }
+
+    function handleKeydown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendQuery();
+      }
+    }
+
+    function addMessage(role, content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message';
+
+      const label = document.createElement('div');
+      label.className = `message-label ${role}`;
+      label.innerHTML = role === 'user'
+        ? '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> You'
+        : '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Agent';
+
+      const contentDiv = document.createElement('div');
+      contentDiv.className = `message-content ${role}`;
+
+      if (role === 'assistant') {
+        contentDiv.innerHTML = marked.parse(content);
+      } else {
+        contentDiv.textContent = content;
+      }
+
+      messageDiv.appendChild(label);
+      messageDiv.appendChild(contentDiv);
+      messagesEl.appendChild(messageDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      return contentDiv;
+    }
+
+    function addLoading() {
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'loading';
+      loadingDiv.id = 'loading';
+      loadingDiv.innerHTML = `
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        Analyzing crime data...
+      `;
+      messagesEl.appendChild(loadingDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeLoading() {
+      const loading = document.getElementById('loading');
+      if (loading) loading.remove();
+    }
+
+    function showError(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error';
+      errorDiv.textContent = message;
+      messagesEl.appendChild(errorDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function sendQuery() {
+      const query = queryEl.value.trim();
+      if (!query || isLoading) return;
+
+      isLoading = true;
+      sendBtn.disabled = true;
+      queryEl.value = '';
+      autoResize(queryEl);
+
+      addMessage('user', query);
+      addLoading();
+
+      try {
+        const response = await fetch('/api/agents/nibrs-crime-agent/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: query }],
+            maxSteps: 10
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        removeLoading();
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullText = '';
+        let contentDiv = null;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line.trim() || !line.startsWith('data: ')) continue;
+
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+
+              if (parsed.type === 'text-delta' && parsed.textDelta) {
+                fullText += parsed.textDelta;
+                if (!contentDiv) {
+                  contentDiv = addMessage('assistant', fullText);
+                } else {
+                  contentDiv.innerHTML = marked.parse(fullText);
+                }
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+              }
+            } catch (e) {
+              // Skip malformed JSON
+            }
+          }
+        }
+
+        if (!contentDiv && fullText) {
+          addMessage('assistant', fullText);
+        } else if (!contentDiv) {
+          addMessage('assistant', 'I processed your request but have no additional information to share.');
+        }
+
+      } catch (error) {
+        removeLoading();
+        console.error('Error:', error);
+        showError(`Failed to get response: ${error.message}`);
+      } finally {
+        isLoading = false;
+        sendBtn.disabled = false;
+        queryEl.focus();
+      }
+    }
+  </script>
+</body>
+</html>

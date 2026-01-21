@@ -305,6 +305,17 @@ function buildWhereClause(conditions: string[]): string {
     : "";
 }
 
+// Normalize code values that may be stored as floats (11.0) or strings ('11')
+function normalizeCode(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  // If it looks like a float (e.g., "11.0"), convert to integer string
+  if (str.includes(".")) {
+    return String(Math.floor(Number(value)));
+  }
+  return str;
+}
+
 // =========================================================================
 // AGENCY SEARCH TOOL
 // =========================================================================
@@ -314,12 +325,12 @@ export const searchAgenciesTool = createTool({
   description:
     "Search for law enforcement agency metadata (names, ORIs, locations). Use this ONLY to find agency ORI identifiers for a specific city/county - NOT for counting agencies or aggregating by state.",
   inputSchema: z.object({
-    stateAbbr: StateAbbrEnum.optional().describe("Filter by state abbreviation"),
-    county: z.string().optional().describe("Filter by county name (partial match)"),
-    agencyName: z.string().optional().describe("Filter by agency name (partial match)"),
-    agencyType: z.string().optional().describe("Filter by agency type"),
-    nibrsOnly: z.boolean().optional().default(false).describe("Only return NIBRS-participating agencies"),
-    limit: z.number().optional().default(100).describe("Maximum results to return (max 10000)"),
+    stateAbbr: StateAbbrEnum.nullish().describe("Filter by state abbreviation"),
+    county: z.string().nullish().describe("Filter by county name (partial match)"),
+    agencyName: z.string().nullish().describe("Filter by agency name (partial match)"),
+    agencyType: z.string().nullish().describe("Filter by agency type"),
+    nibrsOnly: z.boolean().nullish().default(false).describe("Only return NIBRS-participating agencies"),
+    limit: z.number().nullish().default(100).describe("Maximum results to return (max 10000)"),
   }),
   outputSchema: z.object({
     agencies: z.array(z.record(z.string(), z.unknown())),
@@ -382,13 +393,13 @@ export const getIncidentCountsTool = createTool({
   description:
     "Get crime incident counts, rates, and comparisons from NIBRS data. Use for comparing crime across agencies/cities, getting homicide counts by agency, comparing crime rates between states, and ranking agencies by crime type.",
   inputSchema: z.object({
-    stateAbbr: StateAbbrEnum.optional().describe("Filter by state"),
-    ori: z.string().optional().describe("Filter by specific agency ORI"),
-    fromYear: z.number().int().optional().describe("Start year (inclusive)"),
-    toYear: z.number().int().optional().describe("End year (inclusive)"),
-    offenseCode: UCROffenseCodeEnum.optional().describe("Filter by specific offense code"),
+    stateAbbr: StateAbbrEnum.nullish().describe("Filter by state"),
+    ori: z.string().nullish().describe("Filter by specific agency ORI"),
+    fromYear: z.number().int().nullish().describe("Start year (inclusive)"),
+    toYear: z.number().int().nullish().describe("End year (inclusive)"),
+    offenseCode: UCROffenseCodeEnum.nullish().describe("Filter by specific offense code"),
     groupBy: z.enum(["state", "year", "agency", "offense", "state_year", "offense_year", "agency_year"]).default("year").describe("How to group the results"),
-    limit: z.number().optional().default(1000).describe("Maximum results (max 10000)"),
+    limit: z.number().nullish().default(1000).describe("Maximum results (max 10000)"),
   }),
   outputSchema: z.object({
     results: z.array(z.record(z.string(), z.unknown())),
@@ -500,15 +511,15 @@ export const getOffenseSummaryTool = createTool({
   description:
     "Get detailed offense statistics from NIBRS data. Can analyze offenses by type, location, weapon used, or bias motivation.",
   inputSchema: z.object({
-    stateAbbr: StateAbbrEnum.optional().describe("Filter by state"),
-    ori: z.string().optional().describe("Filter by agency ORI"),
-    fromYear: z.number().int().optional().describe("Start year"),
-    toYear: z.number().int().optional().describe("End year"),
-    offenseCode: UCROffenseCodeEnum.optional().describe("Filter by offense code"),
-    locationType: z.string().optional().describe("Filter by location type"),
-    biasMotivation: z.string().optional().describe("Filter by bias motivation (hate crimes)"),
+    stateAbbr: StateAbbrEnum.nullish().describe("Filter by state"),
+    ori: z.string().nullish().describe("Filter by agency ORI"),
+    fromYear: z.number().int().nullish().describe("Start year"),
+    toYear: z.number().int().nullish().describe("End year"),
+    offenseCode: UCROffenseCodeEnum.nullish().describe("Filter by offense code"),
+    locationType: z.string().nullish().describe("Filter by location type"),
+    biasMotivation: z.string().nullish().describe("Filter by bias motivation (hate crimes)"),
     groupBy: z.enum(["offense", "location", "weapon", "bias", "offense_year"]).default("offense").describe("How to group results"),
-    limit: z.number().optional().default(100).describe("Maximum results (max 10000)"),
+    limit: z.number().nullish().default(100).describe("Maximum results (max 10000)"),
   }),
   outputSchema: z.object({
     results: z.array(z.record(z.string(), z.unknown())),
@@ -604,8 +615,12 @@ export const getOffenseSummaryTool = createTool({
     if (Object.keys(descriptionMap).length > 0) {
       rows.forEach((row) => {
         const code = row[descriptionField];
-        if (code && descriptionMap[code as string]) {
-          row.description = descriptionMap[code as string];
+        if (code !== null && code !== undefined) {
+          // Normalize code (handles floats like 11.0 -> "11")
+          const codeKey = normalizeCode(code);
+          if (descriptionMap[codeKey]) {
+            row.description = descriptionMap[codeKey];
+          }
         }
       });
     }
@@ -627,14 +642,14 @@ export const getVictimDemographicsTool = createTool({
   description:
     "Get victim demographic breakdowns (sex, race, age) from NIBRS data. Use this to analyze WHO the victims are.",
   inputSchema: z.object({
-    stateAbbr: StateAbbrEnum.optional().describe("Filter by state"),
-    ori: z.string().optional().describe("Filter by agency ORI"),
-    fromYear: z.number().int().optional().describe("Start year"),
-    toYear: z.number().int().optional().describe("End year"),
-    offenseCode: UCROffenseCodeEnum.optional().describe("Filter by offense code"),
-    victimType: z.enum(["B", "F", "G", "I", "L", "O", "R", "S", "U"]).optional().describe("Filter by victim type"),
+    stateAbbr: StateAbbrEnum.nullish().describe("Filter by state"),
+    ori: z.string().nullish().describe("Filter by agency ORI"),
+    fromYear: z.number().int().nullish().describe("Start year"),
+    toYear: z.number().int().nullish().describe("End year"),
+    offenseCode: UCROffenseCodeEnum.nullish().describe("Filter by offense code"),
+    victimType: z.enum(["B", "F", "G", "I", "L", "O", "R", "S", "U"]).nullish().describe("Filter by victim type"),
     groupBy: z.enum(["sex", "race", "ethnicity", "age_group", "victim_type", "sex_race"]).default("sex").describe("How to group demographic results"),
-    limit: z.number().optional().default(100).describe("Maximum results"),
+    limit: z.number().nullish().default(100).describe("Maximum results"),
   }),
   outputSchema: z.object({
     results: z.array(z.record(z.string(), z.unknown())),
@@ -793,9 +808,9 @@ export const getCrimeTrendsTool = createTool({
   description:
     "Get crime trend data over time. Returns time-series data showing incident counts by year or month.",
   inputSchema: z.object({
-    stateAbbr: StateAbbrEnum.optional().describe("Filter by state"),
-    ori: z.string().optional().describe("Filter by agency ORI"),
-    offenseCode: UCROffenseCodeEnum.optional().describe("Filter by offense code"),
+    stateAbbr: StateAbbrEnum.nullish().describe("Filter by state"),
+    ori: z.string().nullish().describe("Filter by agency ORI"),
+    offenseCode: UCROffenseCodeEnum.nullish().describe("Filter by offense code"),
     fromYear: z.number().int().describe("Start year"),
     toYear: z.number().int().describe("End year"),
     granularity: z.enum(["year", "month"]).default("year").describe("Time granularity for trend data"),
@@ -886,13 +901,13 @@ export const getWeaponAnalysisTool = createTool({
   description:
     "Analyze weapon usage in crimes from NIBRS data. Shows what types of weapons are used in offenses.",
   inputSchema: z.object({
-    stateAbbr: StateAbbrEnum.optional().describe("Filter by state"),
-    ori: z.string().optional().describe("Filter by agency ORI"),
-    fromYear: z.number().int().optional().describe("Start year"),
-    toYear: z.number().int().optional().describe("End year"),
-    offenseCode: UCROffenseCodeEnum.optional().describe("Filter by offense code"),
+    stateAbbr: StateAbbrEnum.nullish().describe("Filter by state"),
+    ori: z.string().nullish().describe("Filter by agency ORI"),
+    fromYear: z.number().int().nullish().describe("Start year"),
+    toYear: z.number().int().nullish().describe("End year"),
+    offenseCode: UCROffenseCodeEnum.nullish().describe("Filter by offense code"),
     groupBy: z.enum(["weapon", "weapon_offense", "weapon_year"]).default("weapon").describe("How to group results"),
-    limit: z.number().optional().default(50).describe("Maximum results"),
+    limit: z.number().nullish().default(50).describe("Maximum results"),
   }),
   outputSchema: z.object({
     results: z.array(z.record(z.string(), z.unknown())),
@@ -956,10 +971,12 @@ export const getWeaponAnalysisTool = createTool({
 
     const rows = await runQuery(sql);
 
-    // Add descriptions
+    // Add descriptions - weapon codes may be stored as floats (11.0) or strings ('11')
     rows.forEach((row) => {
-      if (row.weapon_code) {
-        row.weapon_description = WEAPON_DESCRIPTIONS[row.weapon_code as string] || "Unknown";
+      if (row.weapon_code !== null && row.weapon_code !== undefined) {
+        // Normalize weapon code: handle both float (11.0) and string ('11') formats
+        const weaponKey = normalizeCode(row.weapon_code);
+        row.weapon_description = WEAPON_DESCRIPTIONS[weaponKey] || "Unknown";
       }
       if (row.offense_code) {
         row.offense_description = UCR_OFFENSE_DESCRIPTIONS[row.offense_code as string] || "Unknown";
@@ -983,13 +1000,13 @@ export const getBiasAnalysisTool = createTool({
   description:
     "Analyze hate crime bias motivations from NIBRS data. Shows the distribution of bias motivations (racial, religious, sexual orientation, etc.) in crimes.",
   inputSchema: z.object({
-    stateAbbr: StateAbbrEnum.optional().describe("Filter by state"),
-    ori: z.string().optional().describe("Filter by agency ORI"),
-    fromYear: z.number().int().optional().describe("Start year"),
-    toYear: z.number().int().optional().describe("End year"),
-    biasMotivation: z.string().optional().describe("Filter by specific bias motivation"),
+    stateAbbr: StateAbbrEnum.nullish().describe("Filter by state"),
+    ori: z.string().nullish().describe("Filter by agency ORI"),
+    fromYear: z.number().int().nullish().describe("Start year"),
+    toYear: z.number().int().nullish().describe("End year"),
+    biasMotivation: z.string().nullish().describe("Filter by specific bias motivation"),
     groupBy: z.enum(["bias", "bias_offense", "bias_year", "bias_state"]).default("bias").describe("How to group results"),
-    limit: z.number().optional().default(50).describe("Maximum results"),
+    limit: z.number().nullish().default(50).describe("Maximum results"),
   }),
   outputSchema: z.object({
     results: z.array(z.record(z.string(), z.unknown())),
@@ -1088,13 +1105,13 @@ export const getLocationAnalysisTool = createTool({
   description:
     "Analyze where crimes occur by location type from NIBRS data. Shows distribution of offenses across different location types (residence, street, bar, etc.).",
   inputSchema: z.object({
-    stateAbbr: StateAbbrEnum.optional().describe("Filter by state"),
-    ori: z.string().optional().describe("Filter by agency ORI"),
-    fromYear: z.number().int().optional().describe("Start year"),
-    toYear: z.number().int().optional().describe("End year"),
-    offenseCode: UCROffenseCodeEnum.optional().describe("Filter by offense code"),
+    stateAbbr: StateAbbrEnum.nullish().describe("Filter by state"),
+    ori: z.string().nullish().describe("Filter by agency ORI"),
+    fromYear: z.number().int().nullish().describe("Start year"),
+    toYear: z.number().int().nullish().describe("End year"),
+    offenseCode: UCROffenseCodeEnum.nullish().describe("Filter by offense code"),
     groupBy: z.enum(["location", "location_offense", "location_year"]).default("location").describe("How to group results"),
-    limit: z.number().optional().default(50).describe("Maximum results"),
+    limit: z.number().nullish().default(50).describe("Maximum results"),
   }),
   outputSchema: z.object({
     results: z.array(z.record(z.string(), z.unknown())),
@@ -1182,11 +1199,53 @@ export const getLocationAnalysisTool = createTool({
 
 export const executeCustomQueryTool = createTool({
   id: "execute-custom-query",
-  description:
-    "Execute a custom SQL query against the NIBRS BigQuery tables. Use this for complex queries that aren't covered by the other functions. Tables available: agencies, administrative_segment, offense_segment, victim_segment, arrestee_segment. MUST be a SELECT query only.",
+  description: `Execute a custom SQL query against the NIBRS BigQuery tables. Use for complex queries not covered by other tools. MUST be SELECT only.
+
+**TABLES & KEY COLUMNS:**
+
+**agencies** (~19,500 rows)
+- ori (STRING PK) - 9-char agency ID like 'CA0010100'
+- agency_name, agency_type_name, state_abbr, state_name, counties
+- is_nibrs (BOOL), nibrs_start_date (DATE)
+
+**administrative_segment** (~10M/year) - One row per incident
+- ori, incident_number (unique combo = incident ID)
+- incident_date (DATE), incident_date_hour (INT64 0-23), data_year (INT64)
+- total_offense_segments, total_victim_segments, total_offender_segments, total_arrestee_segments (INT64)
+- cleared_exceptionally: 'A'=Death of Offender, 'B'=Prosecution Declined, 'N'=Not Applicable
+
+**offense_segment** (~12M/year) - One row per offense
+- ori, incident_number, incident_date, data_year
+- ucr_offense_code (STRING): '09A'=Murder, '11A'=Rape, '120'=Robbery, '13A'=Aggravated Assault, '13B'=Simple Assault, '220'=Burglary, '23H'=Larceny, '240'=Motor Vehicle Theft, '290'=Vandalism, '35A'=Drugs, '520'=Weapons
+- offense_attempted_or_completed: 'A'=Attempted, 'C'=Completed
+- location_type (STRING): '20'=Residence, '13'=Street, '07'=Convenience Store, '18'=Parking, '22'=School
+- bias_motivation (STRING): '88'=None, '12'=Anti-Black, '21'=Anti-Jewish, '14'=Anti-Asian, '32'=Anti-Hispanic, '41'=Anti-Gay Male, '43'=Anti-LGBTQ
+- type_weapon_force_involved1: '11'=Firearm, '12'=Handgun, '13'=Rifle, '20'=Knife, '40'=Personal Weapons, '99'=None
+
+**victim_segment** (~12M/year) - One row per victim
+- ori, incident_number, incident_date, data_year, victim_sequence_number
+- type_of_victim: 'I'=Individual, 'B'=Business, 'L'=Law Enforcement, 'G'=Government
+- age_of_victim (STRING '01'-'99', 'NB'=Newborn), sex_of_victim ('M','F','U'), race_of_victim ('W','B','A','I','P')
+- ethnicity_of_victim: 'H'=Hispanic, 'N'=Not Hispanic
+- ucr_offense_code1 through ucr_offense_code10 (STRING)
+
+**arrestee_segment** (~3.3M/year)
+- ori, incident_number, incident_date, data_year, arrest_date
+- ucr_arrest_offense_code, type_of_arrest: 'O'=On-View, 'S'=Summoned, 'T'=Taken Into Custody
+- age_of_arrestee, sex_of_arrestee, race_of_arrestee, ethnicity_of_arrestee
+
+**JOIN PATTERN:**
+FROM administrative_segment a
+JOIN offense_segment o ON a.ori = o.ori AND a.incident_number = o.incident_number
+JOIN agencies ag ON a.ori = ag.ori
+WHERE a.data_year = 2024
+
+**COUNT DISTINCT INCIDENTS:** COUNT(DISTINCT CONCAT(ori, '-', incident_number))
+
+**HATE CRIMES:** WHERE bias_motivation != '88' (exclude 'None')`,
   inputSchema: z.object({
-    sql: z.string().describe("Custom SQL query to execute. Must be SELECT only."),
-    limit: z.number().optional().default(1000).describe("Maximum rows to return (capped at 10000)"),
+    sql: z.string().describe("Custom SQL query to execute. Must be SELECT only. Do NOT wrap table names in backticks."),
+    limit: z.number().nullish().default(1000).describe("Maximum rows to return (capped at 10000)"),
   }),
   outputSchema: z.object({
     results: z.array(z.record(z.string(), z.unknown())),
@@ -1215,7 +1274,13 @@ export const executeCustomQueryTool = createTool({
     let sql = input.sql;
     const tables = ["agencies", "administrative_segment", "offense_segment", "victim_segment", "arrestee_segment"];
     for (const table of tables) {
-      const regex = new RegExp(`(?<!\\.)\\b${table}\\b`, "gi");
+      // First, remove any existing backticks around the table name to normalize
+      const backtickRegex = new RegExp(`\`${table}\``, "gi");
+      sql = sql.replace(backtickRegex, table);
+      
+      // Then replace unqualified table names with fully qualified names
+      // Match table name that is NOT preceded by a dot or already qualified
+      const regex = new RegExp(`(?<![.\`])\\b${table}\\b(?!\`)`, "gi");
       sql = sql.replace(regex, `\`${PROJECT_ID}.${DATASET}.${table}\``);
     }
 

@@ -43,20 +43,14 @@ npm run dev
 ```
 
 This starts:
-- **Mastra Studio** at `http://localhost:4111/` - Interactive UI for testing
-- **Custom Frontend** at `http://localhost:4111/public/` - Simple query interface
+- **Mastra Studio** at `http://localhost:4111/` - Interactive UI for testing the agent
 - **REST API** at `http://localhost:4111/api/` - Programmatic access
-- **Swagger UI** at `http://localhost:4111/swagger-ui` - API documentation
 
 ## 📡 Usage
 
 ### Using Mastra Studio
 
 Navigate to `http://localhost:4111/` to access Mastra Studio. Select the **nibrs-crime-agent** from the agents list and start chatting.
-
-### Using the Custom Frontend
-
-Navigate to `http://localhost:4111/public/` for a streamlined chat interface designed for crime data queries.
 
 ### Using the REST API
 
@@ -81,16 +75,14 @@ curl -X POST http://localhost:4111/api/agents/nibrs-crime-agent/generate \
 
 ```
 src/
-├── mastra/
-│   ├── agents/
-│   │   └── nibrs-agent.ts      # Agent definition with system prompt
-│   ├── tools/
-│   │   └── nibrs-tools.ts      # BigQuery tools for crime data
-│   ├── public/
-│   │   └── index.html          # Simple chat frontend
-│   └── index.ts                # Mastra instance configuration
-├── package.json
-└── tsconfig.json
+└── mastra/
+    ├── agents/
+    │   └── nibrs-agent.ts      # Agent definition with system prompt
+    ├── tools/
+    │   └── nibrs-tools.ts      # BigQuery tools for crime data
+    └── index.ts                # Mastra instance configuration
+package.json
+tsconfig.json
 ```
 
 ## 🛠 Available Tools
@@ -112,18 +104,51 @@ The agent has access to these NIBRS data tools:
 ## 📊 Data Coverage
 
 - **Time Range**: 2020-2025
-- **Records**: 65+ million incidents
-- **Agencies**: ~23,000+ law enforcement agencies
+- **Agencies**: ~19,500 law enforcement agencies
+- **Incidents**: ~10 million per year (~50M+ total in administrative_segment)
+- **Offenses**: ~12 million per year (offense_segment)
+- **Victims**: ~12 million per year (victim_segment)
+- **Arrestees**: ~3.3 million per year (arrestee_segment)
 - **Tables**: agencies, administrative_segment, offense_segment, victim_segment, arrestee_segment
 
-## Example Queries
+## 📋 Key Reference Codes
+
+### Common Offense Codes (ucr_offense_code)
+| Code | Description |
+|------|-------------|
+| 09A | Murder & Nonnegligent Manslaughter |
+| 11A | Rape |
+| 120 | Robbery |
+| 13A | Aggravated Assault |
+| 13B | Simple Assault |
+| 220 | Burglary |
+| 23H | Larceny/Theft |
+| 240 | Motor Vehicle Theft |
+| 290 | Vandalism |
+| 35A | Drug Violations |
+| 520 | Weapon Law Violations |
+
+### Bias Motivation Codes (hate crimes)
+| Code | Description |
+|------|-------------|
+| 88 | None (no bias) - exclude for hate crime queries |
+| 12 | Anti-Black |
+| 21 | Anti-Jewish |
+| 14 | Anti-Asian |
+| 32 | Anti-Hispanic |
+| 41 | Anti-Gay (Male) |
+| 43 | Anti-LGBTQ |
+
+## 💬 Example Queries
 
 - "What are the most common crimes in California?"
 - "Compare homicide rates between New York and Texas"
+- "How many murders occurred in Texas in 2024?"
 - "What types of weapons are most commonly used in robberies?"
 - "Show me hate crime statistics by bias motivation"
 - "What's the trend in motor vehicle theft from 2020-2025?"
 - "Where do most burglaries occur (by location type)?"
+- "What percentage of aggravated assault victims are male?"
 
 ## 🤖 Model Configuration
 

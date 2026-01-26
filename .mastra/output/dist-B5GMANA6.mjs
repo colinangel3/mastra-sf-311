@@ -4,7 +4,7 @@ import '@mastra/core/evals/scoreTraces';
 import '@mastra/core/mastra';
 import '@mastra/libsql';
 import '@mastra/core/agent';
-import './tools/320f01dd-8e33-4866-ac49-de5acb8fbdef.mjs';
+import './tools/29da423f-f3c5-473f-9cca-07e6be815e0a.mjs';
 import '@mastra/core/tools';
 import '@google-cloud/bigquery';
 import 'dotenv';

@@ -1439,7 +1439,7 @@ const nibrsAgent = new Agent({
   name: "NIBRS Crime Data Agent",
   description: "An expert crime data analyst with access to the FBI NIBRS database for querying crime statistics across the United States.",
   instructions: NIBRS_SYSTEM_PROMPT,
-  model: "cerebras/llama-3.3-70b",
+  model: "cerebras/gpt-oss-120b",
   tools: nibrsTools
 });
 

@@ -2,7 +2,7 @@ import { scoreTraces, scoreTracesWorkflow } from '@mastra/core/evals/scoreTraces
 import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
 import { Agent, MessageList, isSupportedLanguageModel, tryGenerateWithJsonFallback, tryStreamWithJsonFallback } from '@mastra/core/agent';
-import { nibrsTools } from './tools/320f01dd-8e33-4866-ac49-de5acb8fbdef.mjs';
+import { nibrsTools } from './tools/29da423f-f3c5-473f-9cca-07e6be815e0a.mjs';
 import { readdir, readFile, mkdtemp, rm, writeFile, mkdir, copyFile, stat } from 'fs/promises';
 import * as https from 'https';
 import { join, resolve as resolve$2, dirname, extname, basename, isAbsolute, relative } from 'path';
@@ -203,7 +203,7 @@ const nibrsAgent = new Agent({
   name: "NIBRS Crime Data Agent",
   description: "An expert crime data analyst with access to the FBI NIBRS database for querying crime statistics across the United States.",
   instructions: NIBRS_SYSTEM_PROMPT,
-  model: "cerebras/llama-3.3-70b",
+  model: "cerebras/gpt-oss-120b",
   tools: nibrsTools
 });
 

@@ -8,3 +8,11 @@ public/
 supabase/.temp
 .auth_token
 data/
+
+# Mastra build output and runtime files
+.mastra/
+mastra.db
+*.db
+
+# Code dump utility output
+all_code_dump.txt

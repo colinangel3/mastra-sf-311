@@ -17,8 +17,9 @@ TMPFILE="$(mktemp)"
 trap 'rm -f "$TMPFILE"' EXIT
 
 # Build the HTTP command with optional parameters
+# Using Mastra REST API endpoint
 HTTP_ARGS=(
-  http://localhost:5000/agent/query-stream
+  http://localhost:4111/api/agents/nibrs-crime-agent/stream
   query="$QUERY"
   max_tokens:="$MAX_TOKENS"
   analysis_mode:="$ANALYSIS_MODE"

@@ -4,7 +4,6 @@ build/
 public/
 temp/
 .vercel/
-public/
 supabase/.temp
 .auth_token
 data/
@@ -14,5 +13,9 @@ data/
 mastra.db
 *.db
 
-# Code dump utility output
-all_code_dump.txt
+# Mac OS files
+.DS_Store
+
+# IDE files
+.cursor/
+.vscode/

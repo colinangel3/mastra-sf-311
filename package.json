@@ -1,7 +1,7 @@
 {
   "name": "mastra-nibrs-crime-agent",
   "version": "1.0.0",
-  "description": "AI agent for querying FBI NIBRS crime data via BigQuery using Mastra",
+  "description": "Mastra AI agent for querying FBI NIBRS crime data via BigQuery",
   "main": "index.js",
   "scripts": {
     "dev": "mastra dev",
